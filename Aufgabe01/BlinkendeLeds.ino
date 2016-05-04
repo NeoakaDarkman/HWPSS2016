@@ -1,16 +1,15 @@
 // LED - test : Blinking with 1Hz frequency
 // LED is connected to Pin 10
 
-// global variables
+// Global Variables
 int ledPin = 10;
 int led2Pin = 11;
-// initialization
+
 void setup(){
-  // set ledPin as output
+  // Initialize Output Pins
   pinMode(ledPin, OUTPUT);
   pinMode(led2Pin, OUTPUT);
 }
-
 
 void loop(){
   // enable the LED
