@@ -199,7 +199,7 @@ int meassureDistance (int Pin) {
   uint32_t endTime;
   uint32_t stTime;
   uint32_t deltaSignalTest = endSignalTest - stSignalTest;  // to qualify if we waited allready 30ms and got no signal
-  while ((digitalRead(Pin) == LOW) || (deltaSignalTest < 30000 ))  // wait 30ms for a response to come
+  while ((digitalRead(Pin) == LOW) && (deltaSignalTest < 30000 ))  // wait 30ms for a response to come
   {
     endSignalTest = micros();
     deltaSignalTest = endSignalTest - stSignalTest;
