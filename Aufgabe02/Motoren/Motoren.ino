@@ -1,7 +1,7 @@
 //global
 #include <LiquidCrystal.h>
 
-int analogPinValue;
+int analogValue;
 int motorA1 = 10;
 int motorA2 = 11;
 int motorB1 = 6;
@@ -26,32 +26,35 @@ void setup() {
 }
 
 void loop() {
-  driveForward(2000, 100);
-  delay(5000);
-  int cm = meassureDistance(us1);
-  lcd.clear();
-  lcd.print(cm);
-  delay(5000);
-  int analogValue = analogRead(A0);
+  analogValue = analogRead(A0);
   if (analogValue < 100)  // S1
   {
     circle();
   }
-  if (analogValue >=200 && analogValue <=300)  // S2
+  else if (analogValue >=200 && analogValue <=300)  // S2
   {
     triangle();
   }
-  if (analogValue >= 420 && analogValue <=530)  // S3
+  else if (analogValue >= 420 && analogValue <=530)  // S3
   {
     driveWithoutCollision();
   }
-  if (analogValue >=600 && analogValue <=750)  // S4
+  else if (analogValue >=600 && analogValue <=750)  // S4
   {
     square();
   }
-  if (analogValue >=770 && analogValue <= 900)  // S5
+  else if (analogValue >=770 && analogValue <= 900)  // S5
   {
     hexagon();
+  }
+  else
+  {
+  driveForward(2000, 100);
+  delay(2000);
+  int cm = meassureDistance(us1);
+  lcd.clear();
+  lcd.print(cm);
+  delay(1000);
   }
 }
 //Values for selectmotor: 0 for motor A
@@ -117,26 +120,26 @@ void driveCurve(int runtime, uint8_t spd, uint8_t str){
   sp = spd * (45 - str)/45;
   int spF = (int)sp;
   if(str > -1){
-      analogWrite(11, spd); 
+      analogWrite(motorA2, spd); 
       // Motor A always forward
-      digitalWrite(10, LOW);
+      digitalWrite(motorA1, LOW);
       
       if (str == 0){
         driveForward(runtime, spd);
         }    
       
       else if(str == 45){
-        digitalWrite(6, LOW);
-        digitalWrite(9, LOW);
+        digitalWrite(motorB1, LOW);
+        digitalWrite(motorB2, LOW);
         }
       else if(str > 45){
-        analogWrite(6, spB);// motor B backwards
-        digitalWrite(9, LOW);
+        analogWrite(motorB1, spB);// motor B backwards
+        digitalWrite(motorB2, LOW);
         }
       // motor B forward
       else{
-        analogWrite(9, spF);
-        digitalWrite(6, LOW);
+        analogWrite(motorB2, spF);
+        digitalWrite(motorB1, LOW);
       }
   }
   else{
@@ -145,28 +148,28 @@ void driveCurve(int runtime, uint8_t spd, uint8_t str){
      sp = spd * (str + 45)/45;
     int spF1 = (int)sp;
 
-    analogWrite(9, spd);
+    analogWrite(motorB2, spd);
     // Motor B always forward
-    digitalWrite(6, LOW);
+    digitalWrite(motorB1, LOW);
     if(str > -44){
       if (str == -45){
-        digitalWrite(11, LOW);
-        digitalWrite(10, LOW);
+        digitalWrite(motorA2, LOW);
+        digitalWrite(motorA1, LOW);
         }
       else{
-        analogWrite(11, spB1);
-        digitalWrite(10, LOW);
+        analogWrite(motorA2, spB1);
+        digitalWrite(motorA1, LOW);
       }
     }
-     // motor A forward
+     // motor A backwards
     else{
-      analogWrite(10, spF1);
-      digitalWrite(11, LOW);
+      analogWrite(motorA1, spF1);
+      digitalWrite(motorA2, LOW);
     }
   }
     delay(runtime);
   }
-}
+
   void circle() {
   // drives a circle
   driveCurve(20000, 100, 40);
@@ -202,91 +205,63 @@ void hexagon() {
 // detect the distance of a barrier and return the distance in cm.
 // -1 is returned if no barrier is detected.
 // use PIN 12 as connector for US1
-int meassureDistance(int Pin) {
+int meassureDistance (int Pin) {
   activateSensor();
-  //
-  boolean gotSignal = false;
-  uint32_t stSignalTest = micros();
-  uint32_t endSignalTest = micros();
-  uint32_t endTime;
-  uint32_t stTime;
-  uint32_t deltaSignalTest = endSignalTest - stSignalTest;  // to qualify if we waited allready 30ms and got no signal
-  while ((digitalRead(Pin) == LOW) && (deltaSignalTest < 30000 ))  // wait 30ms for a response to come
-  {
-    endSignalTest = micros();
-    deltaSignalTest = endSignalTest - stSignalTest;
-    if (digitalRead(Pin) == HIGH)  // we got a response so break loop
-    {
-      uint32_t stTime = micros();  // startTime from the responsepulse
-      gotSignal = true;
-      deltaSignalTest = 30000;  // to break while loop
-    }
-  }
-  if (gotSignal == false)
+  uint32_t pulseTime = pulseIn (Pin, HIGH, 30000);
+  if (pulseTime == 0)
   {
     return -1;
   }
   else
   {
-  while (digitalRead(Pin) == HIGH)
-  {
-    if (digitalRead(Pin) == LOW)
-    {
-      uint32_t endTime = micros();
-    }
+    return pulseTime / 58;
   }
-  uint32_t distance = (endTime -stTime) / 58;
-  return distance;
-  }
+
 }  
-  
-//  int starttime = micros();
-//  while (digitalRead(Pin) == HIGH)
-//  {
-//    continue;
-//  }
-//  int endtime = micros();
-//  uint32_t impulseTime = endtime-starttime;
-//  if (impulseTime == 0) // no barrier detected
-//  {
-//    return -1;
-//  }
-//  else 
-//  {
-//    uint32_t distance = (impulseTime/58);
-//    return distance;
+
 void activateSensor() {
   // method to activate US1 according to the exercisesheet.
-  pinMode(12, OUTPUT);
-  digitalWrite(12, LOW);
-  digitalWrite(12, HIGH);
+  pinMode(us1, OUTPUT);
+  digitalWrite(us1, LOW);
+  digitalWrite(us1, HIGH);
   delayMicroseconds(15);  // it says at least wait for 10µs, so we better wait for 15µs
-  digitalWrite(12, LOW);
-  pinMode(12, INPUT);
+  digitalWrite(us1, LOW);
+  pinMode(us1, INPUT);
 } 
 
 void driveWithoutCollision() {
-  while (meassureDistance(us1) == -1)
+  while (true)
   {
-    // everything is fine here, no barrier detected
-    // you could test here how fast in meters per secounds the robot drives
-    // with speed value 100.
-    // while meassureDistance == -1 no barrier in ca 5meter.
-    driveForward(1000, 100);
-  }
-  while (meassureDistance(us1) > 100)
-  {
-    // a barrier comes in 1meter or less, so we have to slow down
-    driveForward(500, 50);
-  }
-  while (meassureDistance(us1) < 30)
-  {
-    //better stop now completly, a barrier comes in less than 30cm
-    driveForward(0, 0);
-    // now check where we can continue to drive
-    driveCurve(100, 20, -90);
-    driveCurve(200, 20, 90);
-    // else add another 90°, than we got the roboter 180° turned from
-    // where he stopped driving.
+    int currentValue = meassureDistance(us1);
+    if (currentValue == -1)
+    {
+      // everything is fine here, no barrier detected
+      // you could test here how fast in meters per secounds the robot drives
+      // with speed value 100.
+      // while meassureDistance == -1 no barrier in ca 5meter.
+      driveForward(1000, 100);
+      delay(1000);
+    }
+    if (currentValue > 100)
+    {
+      // a barrier comes in 1meter or less, so we have to slow down
+      driveForward(500, 100);
+      delay(500);
+    }
+    if (currentValue <= 100 && currentValue >=30)
+    {
+      driveForward(500, 75);
+      delay(500);
+    }
+    if (currentValue < 30)
+    {
+      //better stop now completly, a barrier comes in less than 30cm
+      driveForward(0, 0);
+      // now check where we can continue to drive
+      driveCurve(100, 20, -90);
+      delay(100);
+      driveCurve(200, 20, 90);
+      delay(200);
+    }
   }
 }
