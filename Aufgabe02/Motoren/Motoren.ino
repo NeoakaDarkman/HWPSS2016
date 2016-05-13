@@ -41,6 +41,27 @@ void loop() {
   delay(20000);
   hexagon();
   delay(20000);
+  analogValue = analogRead(A0);
+  if (analogValue < 100)  // S1
+  {
+    circle();
+  }
+  if (analogValue >=200 && analogValue <=300)  // S2
+  {
+    triangle();
+  }
+  if (analogValue >= 420 && analogValue <=530)  // S3
+  {
+    driveWithoutCollision();
+  }
+  if (analogValue >=600 && analogValue <=750)  // S4
+  {
+    square();
+  }
+  if (analogValue >=770 && analogValue <= 900)  // S5
+  {
+    hexagon();
+  }
 }
 //Values for selectmotor: 0 for motor A
 // 1 for motor B
