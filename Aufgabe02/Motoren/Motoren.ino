@@ -22,7 +22,6 @@ void setup() {
   pinMode(motorA2, OUTPUT);
   pinMode(motorB1, OUTPUT);
   pinMode(motorB2, OUTPUT);
-  //pinMode(us1, INPUT);
   lcd.begin(20,4);
 }
 
@@ -33,14 +32,6 @@ void loop() {
   lcd.clear();
   lcd.print(cm);
   delay(5000);
-  circle();
-  delay(20000);
-  square();
-  delay(20000);
-  triangle();
-  delay(20000);
-  hexagon();
-  delay(20000);
   analogValue = analogRead(A0);
   if (analogValue < 100)  // S1
   {
