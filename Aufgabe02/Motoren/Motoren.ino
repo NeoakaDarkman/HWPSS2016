@@ -30,7 +30,17 @@ void loop() {
   driveForward(2000, 100);
   delay(5000);
   int cm = meassureDistance(us1);
+  lcd.clear();
   lcd.print(cm);
+  delay(5000);
+  circle();
+  delay(20000);
+  square();
+  delay(20000);
+  triangle();
+  delay(20000);
+  hexagon();
+  delay(20000);
 }
 //Values for selectmotor: 0 for motor A
 // 1 for motor B
@@ -86,125 +96,162 @@ void driveForward(int runtime, uint8_t spd) {
   setMotorSpeed(true, 0, 2); // stop both motors.
 }
 
-void driveCurve(int runtime, uint8_t spd, uint8_t strength){
+void driveCurve(int runtime, uint8_t spd, uint8_t str){
   // strength has to be between -90 and 90
   // at 90 and -90 do a circle
   // at 0 drive straight forward
-  float sp = - spd * (strength - 45)/45;
+  float sp = - spd * (str - 45)/45; 
   int spB = (int)sp;
-  sp = spd * (45 - strength)/45;
+  sp = spd * (45 - str)/45;
   int spF = (int)sp;
-  if(strength > -1){
-      analogWrite(motorA1, spd);
-      digitalWrite(motorA2, LOW);
+  if(str > -1){
+      analogWrite(11, spd); 
+      // Motor A always forward
+      digitalWrite(10, LOW);
       
-      if (strength == 0){
+      if (str == 0){
         driveForward(runtime, spd);
         }    
-      // motor B backwards
-      else if(strength == 45){
-        digitalWrite(motorB1, LOW);
-        digitalWrite(motorB2, LOW);
+      
+      else if(str == 45){
+        digitalWrite(6, LOW);
+        digitalWrite(9, LOW);
         }
-      else if(strength == 45){
-        analogWrite(motorB1, spB);
-        digitalWrite(motorB2, LOW);
+      else if(str > 45){
+        analogWrite(6, spB);// motor B backwards
+        digitalWrite(9, LOW);
         }
       // motor B forward
       else{
-        analogWrite(motorB2, spF);
-        digitalWrite(motorB1, LOW);
+        analogWrite(9, spF);
+        digitalWrite(6, LOW);
       }
   }
   else{
-     sp =  spd * (45 - strength)/45;
+     sp =  spd * (45 - str)/45;
     int spB1 = (int)sp;
-     sp = spd * (strength + 45)/45;
+     sp = spd * (str + 45)/45;
     int spF1 = (int)sp;
 
-    analogWrite(motorB2, spd);
-    digitalWrite(motorB1, LOW);
-    // motor A backwards
-    if(strength >= -45){
-      if (strength == -45){
-        digitalWrite(motorA2, LOW);
-        digitalWrite(motorA1, LOW);
+    analogWrite(9, spd);
+    // Motor B always forward
+    digitalWrite(6, LOW);
+    if(str > -44){
+      if (str == -45){
+        digitalWrite(11, LOW);
+        digitalWrite(10, LOW);
         }
       else{
-        analogWrite(motorA2, spB1);
-        digitalWrite(motorA1, LOW);
+        analogWrite(11, spB1);
+        digitalWrite(10, LOW);
       }
     }
      // motor A forward
     else{
-      analogWrite(motorA1, spF1);
-      digitalWrite(motorA2, LOW);
+      analogWrite(10, spF1);
+      digitalWrite(11, LOW);
     }
   }
     delay(runtime);
   }
+
+  void circle() {
+  // drives a circle
+  driveCurve(5000, 100, 40);
+}
+void square(){
+  // drives a square
+  int i = 0;
+  while (i <= 3 ) {  // do this four times.
+    driveForward(3000, 100);
+    driveCurve(675, 100, 90);  // should turn 90° by changing runtime.
+    i += 1;
+  }
+}
+void triangle() {
+  // drives a triangle
+  int i = 0;
+  while (i <= 2) {  // do this three times.
+    driveForward(3000, 100);
+    driveCurve(900, 100, 90);  // should turn 60° by changing runtime.
+    i += 1;
+  }
+}
+void hexagon() {
+  // drives a hexagon.
+  int i = 0;
+  while (i <= 5) { // do this six times.
+    driveForward(3000, 100);
+    driveCurve(450, 100, 90);
+    i += 1; 
+  }
+}
   
 // detect the distance of a barrier and return the distance in cm.
 // -1 is returned if no barrier is detected.
 // use PIN 12 as connector for US1
 int meassureDistance (int Pin) {
   activateSensor();
-  while (digitalRead(Pin) == LOW) {
-    if (digitalRead(Pin) == HIGH) {
-      break;
+  //
+  boolean gotSignal = false;
+  uint32_t stSignalTest = micros();
+  uint32_t endSignalTest = micros();
+  uint32_t endTime;
+  uint32_t stTime;
+  uint32_t deltaSignalTest = endSignalTest - stSignalTest;  // to qualify if we waited allready 30ms and got no signal
+  while ((digitalRead(Pin) == LOW) || (deltaSignalTest < 30000 ))  // wait 30ms for a response to come
+  {
+    endSignalTest = micros();
+    deltaSignalTest = endSignalTest - stSignalTest;
+    if (digitalRead(Pin) == HIGH)  // we got a response so break loop
+    {
+      uint32_t stTime = micros();  // startTime from the responsepulse
+      gotSignal = true;
+      deltaSignalTest = 30000;  // to break while loop
     }
   }
- uint32_t stTime = micros();
+  if (gotSignal == false)
+  {
+    return -1;
+  }
+  else
+  {
   while (digitalRead(Pin) == HIGH)
   {
-    if (digitalRead(Pin) == LOW) {
-      break;
+    if (digitalRead(Pin) == LOW)
+    {
+      uint32_t endTime = micros();
     }
   }
-  uint32_t enTime = micros();
-  uint32_t impulseTime = enTime - stTime;
-  if (impulseTime == 0) // no barrier detected
-  {
-    return -1;
+  uint32_t distance = (endTime -stTime) / 58;
+  return distance;
   }
-  else 
-  {
-    uint32_t distance = (impulseTime/58);
-    return distance;
-  }
- /* uint32_t tim;
-  activateSensor();
-  //int stat = digitalRead(12);
-  //lcd.print(stat);
-  while(digitalRead(12) == HIGH) {
-    tim = micros();
- 
-  }
- // lcd.print(tim);
-  delay(5000);
-  int dist = tim/58;
-  return (dist);
-  /*uint32_t impulseTime = pulseIn(12, HIGH, 30000);
-  if (impulseTime == 0) // no barrier detected
-  {
-    return -1;
-  }
-  else 
-  {
-    uint32_t distance = (impulseTime/58);
-    return distance;
-  }*/
-}
-
+}  
+  
+//  int starttime = micros();
+//  while (digitalRead(Pin) == HIGH)
+//  {
+//    continue;
+//  }
+//  int endtime = micros();
+//  uint32_t impulseTime = endtime-starttime;
+//  if (impulseTime == 0) // no barrier detected
+//  {
+//    return -1;
+//  }
+//  else 
+//  {
+//    uint32_t distance = (impulseTime/58);
+//    return distance;
 void activateSensor() {
   // method to activate US1 according to the exercisesheet.
-  pinMode(us1, OUTPUT);
-  digitalWrite(us1, LOW);
-  digitalWrite(us1, HIGH);
-  delayMicroseconds(15);  // it says at least wait for motorA1µs, so we better wait for 15µs
-  digitalWrite(us1, LOW);
-  pinMode(us1, INPUT);
-}  
+  pinMode(12, OUTPUT);
+  digitalWrite(12, LOW);
+  digitalWrite(12, HIGH);
+  delayMicroseconds(15);  // it says at least wait for 10µs, so we better wait for 15µs
+  digitalWrite(12, LOW);
+  pinMode(12, INPUT);
+} 
 
 void driveWithoutCollision() {
   while (meassureDistance(us1) == -1)
