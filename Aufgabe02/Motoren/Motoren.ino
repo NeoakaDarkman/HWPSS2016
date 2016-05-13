@@ -32,7 +32,7 @@ void loop() {
   lcd.clear();
   lcd.print(cm);
   delay(5000);
-  analogValue = analogRead(A0);
+  int analogValue = analogRead(A0);
   if (analogValue < 100)  // S1
   {
     circle();
@@ -166,17 +166,17 @@ void driveCurve(int runtime, uint8_t spd, uint8_t str){
   }
     delay(runtime);
   }
-
+}
   void circle() {
   // drives a circle
-  driveCurve(5000, 100, 40);
+  driveCurve(20000, 100, 40);
 }
 void square(){
   // drives a square
   int i = 0;
   while (i <= 3 ) {  // do this four times.
     driveForward(3000, 100);
-    driveCurve(675, 100, 90);  // should turn 90° by changing runtime.
+    driveCurve(950, 100, 45);  // should turn 90° by changing runtime.
     i += 1;
   }
 }
@@ -185,7 +185,7 @@ void triangle() {
   int i = 0;
   while (i <= 2) {  // do this three times.
     driveForward(3000, 100);
-    driveCurve(900, 100, 90);  // should turn 60° by changing runtime.
+    driveCurve(1500, 100, 45);  // should turn 60° by changing runtime.
     i += 1;
   }
 }
@@ -194,7 +194,7 @@ void hexagon() {
   int i = 0;
   while (i <= 5) { // do this six times.
     driveForward(3000, 100);
-    driveCurve(450, 100, 90);
+    driveCurve(600, 100, 45);
     i += 1; 
   }
 }
@@ -202,7 +202,7 @@ void hexagon() {
 // detect the distance of a barrier and return the distance in cm.
 // -1 is returned if no barrier is detected.
 // use PIN 12 as connector for US1
-int meassureDistance (int Pin) {
+int meassureDistance(int Pin) {
   activateSensor();
   //
   boolean gotSignal = false;
