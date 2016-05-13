@@ -1,0 +1,28 @@
+int meassureDistance (int Pin) {
+  boolean gotSignal = false;
+  uint32_t endTime;
+  uint32_t stTime;
+  activateSensor();
+  uint32_t stSignalTest = micros();
+  uint32_t endSignalTest = micros();
+  uint32_t deltaSignalTest = endSignalTest - stSignalTest;  // to qualify if we waited allready 30ms and got no signal
+  while (digitalRead(Pin) == LOW)  // wait 30ms for a response to come
+  {
+    endSignalTest = micros();
+    deltaSignalTest = endSignalTest - stSignalTest;
+    uint32_t stTime = micros();
+    if (deltaSignalTest >= 30000)
+    {
+      return -1;
+      break;
+    }
+  }
+  while (digitalRead(Pin) == HIGH)
+  {
+    uint32_t endTime = micros();
+    
+  }
+  uint32_t distance = (endTime -stTime) / 58;
+  return distance;
+  }
+}  
